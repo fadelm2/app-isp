@@ -1,0 +1,81 @@
+.stat-card {
+    background-color: var(--bg-secondary);
+    border-radius: 20px;
+    padding: 20px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.stat-main {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+.stat-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-info .label {
+    font-size: 14px;
+    color: var(--text-primary);
+    opacity: 0.9;
+}
+
+.stat-info .value {
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.stat-info .dots {
+    color: var(--text-secondary);
+    font-size: 10px;
+    letter-spacing: 2px;
+}
+
+.stat-metrics {
+    display: flex;
+    gap: 40px;
+}
+
+.metric-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.metric-item svg {
+    color: #00C853;
+    /* Active green color */
+}
+
+.metric-text {
+    display: flex;
+    flex-direction: column;
+    font-size: 12px;
+}
+
+.metric-text .label {
+    color: var(--text-secondary);
+}
+
+.metric-text .value {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.on-duty {
+    color: #00C853;
+    font-weight: 600;
+}

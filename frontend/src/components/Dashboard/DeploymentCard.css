@@ -1,0 +1,62 @@
+.deployment-card {
+    background-color: var(--bg-secondary);
+    border-radius: 16px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.status-dot.success {
+    background-color: #00C853;
+    box-shadow: 0 0 5px rgba(0, 200, 83, 0.5);
+}
+
+.status-dot.warning {
+    background-color: #FF1744;
+    box-shadow: 0 0 5px rgba(255, 23, 68, 0.5);
+}
+
+.more-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0;
+}
+
+.card-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 15px;
+}
+
+.icon-wrapper {
+    color: #FFC107;
+    background: rgba(255, 193, 7, 0.1);
+    padding: 12px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.card-title {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}

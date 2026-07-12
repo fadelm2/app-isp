@@ -1,0 +1,10 @@
+DROP TABLE IF EXISTS radacct;
+DROP TABLE IF EXISTS radreply;
+DROP TABLE IF EXISTS radcheck;
+DROP TABLE IF EXISTS customer_histories;
+DROP TABLE IF EXISTS payments;
+DROP TABLE IF EXISTS invoices;
+DROP TABLE IF EXISTS customers;
+DROP TABLE IF EXISTS routers;
+DROP TABLE IF EXISTS registrations;
+DROP TABLE IF EXISTS internet_packages;

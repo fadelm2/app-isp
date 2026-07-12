@@ -1,0 +1,20 @@
+.btn-pay {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background-color: #03dac6;
+    color: #121212;
+    font-weight: 600;
+}
+
+.btn-pay:hover {
+    background-color: #01b4a2;
+}
+
+.text-purple {
+    color: #d1a8ff !important;
+}
+
+.font-medium {
+    font-weight: 500;
+}

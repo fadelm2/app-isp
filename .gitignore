@@ -1,0 +1,42 @@
+# Node and Frontend
+node_modules/
+**/node_modules/
+frontend/dist/
+dist/
+.eslintcache
+.stylelintcache
+*.local
+
+# Go compiler outputs and binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+app-isp
+/cmd/web/web
+/cmd/scheduler/scheduler
+/cmd/worker/worker
+
+# Local uploads & storage (crucial for privacy)
+/storage/uploads/
+storage/uploads/**
+/storage/uploads/**/*
+frontend/node_modules
+# Environment and sensitive keys
+.env
+.env.*
+config.json.local
+
+# IDEs & System files
+.idea/
+.vscode/
+*.suo
+*.ntvsca*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db

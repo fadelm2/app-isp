@@ -1,0 +1,47 @@
+{
+  "app": {
+    "name": "golang-clean-architecture"
+  },
+  "web": {
+    "prefork": false,
+    "port": 3000,
+    "link1": "http://192.168.1.70:8080",
+    "link2": "http://192.168.1.70:3000",
+    "link3": "http://192.168.1.11:5173",
+    "link4": "http://localhost:5173"
+  },
+  "log": {
+    "level": 6
+  },
+  "database": {
+    "username": "root",
+    "password": "fadel123",
+    "host": "localhost",
+    "port": 3307,
+    "name": "golang_architecture_jwt",
+    "pool": {
+      "idle": 10,
+      "max": 100,
+      "lifetime": 300
+    }
+  },
+  "kafka": {
+    "bootstrap": {
+      "servers": "localhost:9092"
+    },
+    "group": {
+      "id": "golang-clean-architecture"
+    },
+    "auto": {
+      "offset": {
+        "reset": "earliest"
+      }
+    }
+  },
+  "midtrans": {
+    "server_key": "SB-Mid-server-YyzkaYvpKpLec8Cexdrb3LH7",
+    "client_key": "SB-Mid-client-cGrC44IfUPvwlZ3r",
+    "is_production": false
+  },
+  "secretkey": "fadel123453"
+}

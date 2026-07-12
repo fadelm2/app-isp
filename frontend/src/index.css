@@ -1,0 +1,42 @@
+:root {
+  --bg-primary: #131429;
+  --bg-secondary: #1E1F35; 
+  --text-primary: #FFFFFF;
+  --text-secondary: #888899;
+  
+  /* Gradients */
+  --grad-purple: linear-gradient(135deg, #7F00FF 0%, #E100FF 100%);
+  --grad-orange: linear-gradient(135deg, #FF9900 0%, #FF5500 100%);
+  --grad-green: linear-gradient(135deg, #00C853 0%, #B2FF59 100%);
+  --grad-blue: linear-gradient(135deg, #2979FF 0%, #00B0FF 100%);
+  --grad-red: linear-gradient(135deg, #FF1744 0%, #FF5252 100%);
+  
+  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary); 
+}
+::-webkit-scrollbar-thumb {
+  background: var(--bg-secondary); 
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #555; 
+}

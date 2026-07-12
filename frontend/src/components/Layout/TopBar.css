@@ -1,0 +1,82 @@
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.greeting-section h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.greeting-section p {
+    margin: 5px 0 0;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.actions-section {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.action-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background-color: var(--bg-secondary);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--text-secondary);
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+}
+
+.action-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.action-button .badge {
+    position: absolute;
+    top: -5px;
+    right: -10px;
+    background: var(--bg-secondary);
+    /* Or dark */
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.notification-dot {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    width: 6px;
+    height: 6px;
+    background-color: #FFC107;
+    border-radius: 50%;
+}.menu-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+    border-radius: 8px;
+}
+
+.menu-btn:hover {
+  color: white;
+  background-color: rgba(255, 255, 255, 0.1);
+}
