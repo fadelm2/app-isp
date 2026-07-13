@@ -109,6 +109,8 @@ func TestLogin(t *testing.T) {
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("123457"), bcrypt.DefaultCost)
 	db.Exec("INSERT IGNORE INTO users (id, role_id, username, email, password, company_name, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
 		"noc1", 1, "noc_user", "noc@greenet.id", string(hashedPassword), "GREENET", 1783899129160, 1783899129160)
+	db.Exec("INSERT IGNORE INTO users (id, role_id, username, email, password, company_name, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+		"Fadel", 1, "Fadel Muhammad", "fadel@example.com", string(hashedPassword), "GREENET", 1783899129160, 1783899129160)
 
 	requestBody := model.LoginUserRequest{
 		ID:       "noc1",

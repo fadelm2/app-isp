@@ -9,6 +9,10 @@ export default defineConfig({
       '/api': {
         target: 'http://192.168.1.11:3000',
         changeOrigin: true,
+      },
+      '/storage': {
+        target: 'http://192.168.1.11:3000',
+        changeOrigin: true,
       }
     }
   }

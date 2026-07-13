@@ -40,6 +40,9 @@ func NewFiber(config *viper.Viper) *fiber.App {
 	})
 	app.Use(corsSettings)
 
+	// Serve uploaded files statically
+	app.Static("/storage", "./storage")
+
 	return app
 }
 func NewErrorHandler() fiber.ErrorHandler {

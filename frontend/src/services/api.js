@@ -47,11 +47,11 @@ export const adminService = {
     deletePackage: (id) => api.delete(`/admin/packages/${id}`),
 
     // Customer Registrations
-    getRegistrations: () => api.get('/admin/registrations'),
-    updateRegistrationStatus: (id, status) => api.patch(`/admin/registrations/${id}/status`, { status }),
+    getRegistrations: (params) => api.get('/admin/registrations', { params }),
+    updateRegistrationStatus: (id, status, odp) => api.patch(`/admin/registrations/${id}/status`, { status, odp_number: odp }),
 
     // Customers
-    getCustomers: () => api.get('/admin/customers'),
+    getCustomers: (params) => api.get('/admin/customers', { params }),
     getCustomer: (id) => api.get(`/admin/customers/${id}`),
     updateCustomer: (id, data) => api.patch(`/admin/customers/${id}`, data),
     suspendCustomer: (id, notes) => api.post(`/admin/customers/${id}/_suspend`, { notes }),

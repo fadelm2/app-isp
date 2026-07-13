@@ -19,7 +19,11 @@ export const AdminRegister = () => {
         package_id: '',
         latitude: '0.0',
         longitude: '0.0',
-        notes: ''
+        notes: '',
+        province: '',
+        city: '',
+        district: '',
+        village: ''
     });
 
     const [files, setFiles] = useState({
@@ -265,10 +269,58 @@ export const AdminRegister = () => {
 
                     <div className="form-section">
                         <h3>2. Installation & Service Plan</h3>
+
+                        <div className="form-row">
+                            <div className="form-group-pub">
+                                <label>Province</label>
+                                <input 
+                                    type="text" 
+                                    placeholder="e.g. Kepulauan Riau"
+                                    value={form.province} 
+                                    onChange={(e) => setForm({ ...form, province: e.target.value })} 
+                                    required 
+                                />
+                            </div>
+                            <div className="form-group-pub">
+                                <label>City / Regency</label>
+                                <input 
+                                    type="text" 
+                                    placeholder="e.g. Kota Batam"
+                                    value={form.city} 
+                                    onChange={(e) => setForm({ ...form, city: e.target.value })} 
+                                    required 
+                                />
+                            </div>
+                        </div>
+
+                        <div className="form-row">
+                            <div className="form-group-pub">
+                                <label>District (Kecamatan)</label>
+                                <input 
+                                    type="text" 
+                                    placeholder="e.g. Batu Aji"
+                                    value={form.district} 
+                                    onChange={(e) => setForm({ ...form, district: e.target.value })} 
+                                    required 
+                                />
+                            </div>
+                            <div className="form-group-pub">
+                                <label>Village (Kelurahan / Desa)</label>
+                                <input 
+                                    type="text" 
+                                    placeholder="e.g. Tanjung Uncang"
+                                    value={form.village} 
+                                    onChange={(e) => setForm({ ...form, village: e.target.value })} 
+                                    required 
+                                />
+                            </div>
+                        </div>
+
                         <div className="form-group-pub">
-                            <label>Installation Address</label>
+                            <label>Full Installation Address (Street, RT/RW, Number)</label>
                             <textarea 
                                 rows="3" 
+                                placeholder="e.g. Jl. Engku Putri No. 5, RT 02/RW 03"
                                 value={form.installation_address} 
                                 onChange={(e) => setForm({ ...form, installation_address: e.target.value })} 
                                 required

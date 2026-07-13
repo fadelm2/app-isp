@@ -41,6 +41,11 @@ func RegistrationToResponse(reg *entity.Registration) model.RegistrationResponse
 		HousePath:           reg.HousePath,
 		InstallationPath:    reg.InstallationPath,
 		SupportingDocPath:   reg.SupportingDocPath,
+		OdpNumber:           reg.OdpNumber,
+		Province:            reg.Province,
+		City:                reg.City,
+		District:            reg.District,
+		Village:             reg.Village,
 		CreatedAt:           reg.CreatedAt,
 		UpdatedAt:           reg.UpdatedAt,
 		Package:             PackageToResponse(&reg.Package),
@@ -67,6 +72,11 @@ func CustomerToResponse(customer *entity.Customer) model.CustomerResponse {
 	if customer.Router != nil {
 		routerResp = RouterToResponse(customer.Router)
 	}
+	var regResp *model.RegistrationResponse
+	if customer.Registration != nil {
+		resp := RegistrationToResponse(customer.Registration)
+		regResp = &resp
+	}
 	return model.CustomerResponse{
 		ID:             customer.ID,
 		UserID:         customer.UserID,
@@ -76,11 +86,13 @@ func CustomerToResponse(customer *entity.Customer) model.CustomerResponse {
 		PppUsername:    customer.PppUsername,
 		RadiusUsername: customer.RadiusUsername,
 		DueDateDay:     customer.DueDateDay,
+		OdpNumber:      customer.OdpNumber,
 		CreatedAt:      customer.CreatedAt,
 		UpdatedAt:      customer.UpdatedAt,
 		User:           *UserToResponse(&customer.User),
 		Package:        PackageToResponse(&customer.Package),
 		Router:         routerResp,
+		Registration:   regResp,
 	}
 }
 

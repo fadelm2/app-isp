@@ -18,7 +18,11 @@ export const PublicRegister = () => {
         package_id: '',
         latitude: '0.0',
         longitude: '0.0',
-        notes: ''
+        notes: '',
+        province: '',
+        city: '',
+        district: '',
+        village: ''
     });
 
     const [files, setFiles] = useState({
@@ -267,10 +271,58 @@ export const PublicRegister = () => {
                     {/* Section 2: Installation */}
                     <div className="form-section">
                         <h3>2. Alamat & Pilihan Layanan</h3>
+
+                        <div className="form-row">
+                            <div className="form-group-pub">
+                                <label>Provinsi</label>
+                                <input 
+                                    type="text" 
+                                    placeholder="e.g. Kepulauan Riau"
+                                    value={form.province} 
+                                    onChange={(e) => setForm({ ...form, province: e.target.value })} 
+                                    required 
+                                />
+                            </div>
+                            <div className="form-group-pub">
+                                <label>Kota / Kabupaten</label>
+                                <input 
+                                    type="text" 
+                                    placeholder="e.g. Kota Batam"
+                                    value={form.city} 
+                                    onChange={(e) => setForm({ ...form, city: e.target.value })} 
+                                    required 
+                                />
+                            </div>
+                        </div>
+
+                        <div className="form-row">
+                            <div className="form-group-pub">
+                                <label>Kecamatan</label>
+                                <input 
+                                    type="text" 
+                                    placeholder="e.g. Batu Aji"
+                                    value={form.district} 
+                                    onChange={(e) => setForm({ ...form, district: e.target.value })} 
+                                    required 
+                                />
+                            </div>
+                            <div className="form-group-pub">
+                                <label>Kelurahan / Desa</label>
+                                <input 
+                                    type="text" 
+                                    placeholder="e.g. Tanjung Uncang"
+                                    value={form.village} 
+                                    onChange={(e) => setForm({ ...form, village: e.target.value })} 
+                                    required 
+                                />
+                            </div>
+                        </div>
+
                         <div className="form-group-pub">
-                            <label>Alamat Instalasi (Tempat Internet Dipasang)</label>
+                            <label>Alamat Instalasi Lengkap (Jl, RT/RW, No Rumah)</label>
                             <textarea 
                                 rows="3" 
+                                placeholder="Contoh: Jl. Engku Putri No. 5, RT 02/RW 03"
                                 value={form.installation_address} 
                                 onChange={(e) => setForm({ ...form, installation_address: e.target.value })} 
                                 required

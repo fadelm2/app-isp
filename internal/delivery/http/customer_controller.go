@@ -4,6 +4,7 @@ import (
 	"golang-clean-architecture/internal/delivery/http/middleware"
 	"golang-clean-architecture/internal/model"
 	"golang-clean-architecture/internal/usecase"
+	"math"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/sirupsen/logrus"
@@ -22,11 +23,29 @@ func NewCustomerController(log *logrus.Logger, useCase *usecase.CustomerUseCase)
 }
 
 func (c *CustomerController) List(ctx *fiber.Ctx) error {
-	response, err := c.UseCase.List(ctx.UserContext())
+	request := &model.SearchCustomerRequest{
+		Search: ctx.Query("search", ""),
+		Status: ctx.Query("status", ""),
+		Page:   ctx.QueryInt("page", 1),
+		Size:   ctx.QueryInt("size", 10),
+	}
+
+	response, total, err := c.UseCase.List(ctx.UserContext(), request)
 	if err != nil {
 		return err
 	}
-	return ctx.JSON(model.WebResponse[[]model.CustomerResponse]{Data: response})
+
+	paging := &model.PageMetadata{
+		Page:      request.Page,
+		Size:      request.Size,
+		TotalItem: total,
+		TotalPage: int64(math.Ceil(float64(total) / float64(request.Size))),
+	}
+
+	return ctx.JSON(model.WebResponse[[]model.CustomerResponse]{
+		Data:   response,
+		Paging: paging,
+	})
 }
 
 func (c *CustomerController) Get(ctx *fiber.Ctx) error {

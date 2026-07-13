@@ -19,11 +19,17 @@ type CreateRegistrationRequest struct {
 	HousePath           string  `json:"house_path"`
 	InstallationPath    string  `json:"installation_path"`
 	SupportingDocPath   string  `json:"supporting_doc_path"`
+	OdpNumber           string  `json:"odp_number"`
+	Province            string  `json:"province"`
+	City                string  `json:"city"`
+	District            string  `json:"district"`
+	Village             string  `json:"village"`
 }
 
 type UpdateRegistrationStatusRequest struct {
-	ID     string `json:"id" validate:"required"`
-	Status string `json:"status" validate:"required"` // pending, under_review, surveying, approved, rejected
+	ID        string `json:"id" validate:"required"`
+	Status    string `json:"status" validate:"required"` // pending, under_review, surveying, approved, rejected
+	OdpNumber string `json:"odp_number"`
 }
 
 type RegistrationResponse struct {
@@ -47,7 +53,19 @@ type RegistrationResponse struct {
 	HousePath           string          `json:"house_path"`
 	InstallationPath    string          `json:"installation_path"`
 	SupportingDocPath   string          `json:"supporting_doc_path"`
+	OdpNumber           string          `json:"odp_number"`
+	Province            string          `json:"province"`
+	City                string          `json:"city"`
+	District            string          `json:"district"`
+	Village             string          `json:"village"`
 	CreatedAt           int64           `json:"created_at"`
 	UpdatedAt           int64           `json:"updated_at"`
 	Package             PackageResponse `json:"package"`
+}
+
+type SearchRegistrationRequest struct {
+	Search string `json:"search"`
+	Status string `json:"status"`
+	Page   int    `json:"page" validate:"min=1"`
+	Size   int    `json:"size" validate:"min=1,max=100"`
 }

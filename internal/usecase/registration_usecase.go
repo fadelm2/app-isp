@@ -16,6 +16,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/jaevor/go-nanoid"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -102,6 +103,10 @@ func (c *RegistrationUseCase) Create(ctx context.Context, request *model.CreateR
 		HousePath:           request.HousePath,
 		InstallationPath:    request.InstallationPath,
 		SupportingDocPath:   request.SupportingDocPath,
+		Province:            request.Province,
+		City:                request.City,
+		District:            request.District,
+		Village:             request.Village,
 	}
 
 	if err := c.RegistrationRepository.Create(tx, reg); err != nil {
@@ -117,18 +122,23 @@ func (c *RegistrationUseCase) Create(ctx context.Context, request *model.CreateR
 	return converter.RegistrationToResponse(reg), nil
 }
 
-func (c *RegistrationUseCase) List(ctx context.Context) ([]model.RegistrationResponse, error) {
+func (c *RegistrationUseCase) List(ctx context.Context, request *model.SearchRegistrationRequest) ([]model.RegistrationResponse, int64, error) {
 	tx := c.DB.WithContext(ctx)
-	regs, err := c.RegistrationRepository.FindAll(tx)
+
+	if err := c.Validate.Struct(request); err != nil {
+		return nil, 0, fiber.ErrBadRequest
+	}
+
+	regs, total, err := c.RegistrationRepository.Search(tx, request)
 	if err != nil {
-		return nil, fiber.ErrInternalServerError
+		return nil, 0, fiber.ErrInternalServerError
 	}
 
 	var responses []model.RegistrationResponse
 	for _, r := range regs {
 		responses = append(responses, converter.RegistrationToResponse(&r))
 	}
-	return responses, nil
+	return responses, total, nil
 }
 
 func (c *RegistrationUseCase) UpdateStatus(ctx context.Context, request *model.UpdateRegistrationStatusRequest, adminUserID string) (model.RegistrationResponse, error) {
@@ -153,6 +163,9 @@ func (c *RegistrationUseCase) UpdateStatus(ctx context.Context, request *model.U
 
 	oldStatus := reg.Status
 	reg.Status = request.Status
+	if request.OdpNumber != "" {
+		reg.OdpNumber = request.OdpNumber
+	}
 
 	if err := c.RegistrationRepository.Update(tx, reg); err != nil {
 		return model.RegistrationResponse{}, fiber.ErrInternalServerError
@@ -206,11 +219,20 @@ func (c *RegistrationUseCase) processApproval(tx *gorm.DB, reg *entity.Registrat
 		router = routers[0]
 	}
 
-	// Generate PPP / RADIUS Creds
+	// Generate PPP / RADIUS Creds using jaevor go-nanoid
+	usernameGen, err := nanoid.CustomASCII("0123456789", 6)
+	if err != nil {
+		return err
+	}
+	passwordGen, err := nanoid.CustomASCII("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 8)
+	if err != nil {
+		return err
+	}
+
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	customerCode := fmt.Sprintf("CUST-%05d", r.Intn(100000))
-	pppUser := fmt.Sprintf("%s@greenet", reg.FullName)
-	pppPass := fmt.Sprintf("pass%d", r.Intn(90000)+10000)
+	pppUser := usernameGen()
+	pppPass := passwordGen()
 
 	customer := &entity.Customer{
 		ID:             customerCode,
@@ -224,6 +246,7 @@ func (c *RegistrationUseCase) processApproval(tx *gorm.DB, reg *entity.Registrat
 		RadiusUsername: pppUser,
 		RadiusPassword: pppPass,
 		DueDateDay:     10,
+		OdpNumber:      reg.OdpNumber,
 	}
 
 	if err := c.CustomerRepository.Create(tx, customer); err != nil {

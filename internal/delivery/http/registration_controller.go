@@ -4,6 +4,7 @@ import (
 	"golang-clean-architecture/internal/delivery/http/middleware"
 	"golang-clean-architecture/internal/model"
 	"golang-clean-architecture/internal/usecase"
+	"math"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -43,6 +44,10 @@ func (c *RegistrationController) Create(ctx *fiber.Ctx) error {
 		request.Latitude, _ = strconv.ParseFloat(ctx.FormValue("latitude"), 64)
 		request.Longitude, _ = strconv.ParseFloat(ctx.FormValue("longitude"), 64)
 		request.Notes = ctx.FormValue("notes")
+		request.Province = ctx.FormValue("province")
+		request.City = ctx.FormValue("city")
+		request.District = ctx.FormValue("district")
+		request.Village = ctx.FormValue("village")
 
 		uploadDir := "./storage/uploads"
 		os.MkdirAll(uploadDir+"/ktp", os.ModePerm)
@@ -93,11 +98,29 @@ func (c *RegistrationController) Create(ctx *fiber.Ctx) error {
 }
 
 func (c *RegistrationController) List(ctx *fiber.Ctx) error {
-	response, err := c.UseCase.List(ctx.UserContext())
+	request := &model.SearchRegistrationRequest{
+		Search: ctx.Query("search", ""),
+		Status: ctx.Query("status", ""),
+		Page:   ctx.QueryInt("page", 1),
+		Size:   ctx.QueryInt("size", 10),
+	}
+
+	response, total, err := c.UseCase.List(ctx.UserContext(), request)
 	if err != nil {
 		return err
 	}
-	return ctx.JSON(model.WebResponse[[]model.RegistrationResponse]{Data: response})
+
+	paging := &model.PageMetadata{
+		Page:      request.Page,
+		Size:      request.Size,
+		TotalItem: total,
+		TotalPage: int64(math.Ceil(float64(total) / float64(request.Size))),
+	}
+
+	return ctx.JSON(model.WebResponse[[]model.RegistrationResponse]{
+		Data:   response,
+		Paging: paging,
+	})
 }
 
 func (c *RegistrationController) UpdateStatus(ctx *fiber.Ctx) error {

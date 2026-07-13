@@ -21,6 +21,11 @@ type Registration struct {
 	HousePath           string          `gorm:"column:house_path"`
 	InstallationPath    string          `gorm:"column:installation_path"`
 	SupportingDocPath   string          `gorm:"column:supporting_doc_path"`
+	OdpNumber           string          `gorm:"column:odp_number"`
+	Province            string          `gorm:"column:province"`
+	City                string          `gorm:"column:city"`
+	District            string          `gorm:"column:district"`
+	Village             string          `gorm:"column:village"`
 	CreatedAt           int64           `gorm:"column:created_at;autoCreateTime:milli"`
 	UpdatedAt           int64           `gorm:"column:updated_at;autoCreateTime:milli;autoUpdateTime:milli"`
 	Package             InternetPackage `gorm:"foreignKey:package_id;references:id;->"`

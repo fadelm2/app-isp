@@ -11,23 +11,33 @@ import { Login } from './pages/Login';
 import { PublicRegister } from './pages/PublicRegister';
 import { AdminRegister } from './pages/AdminRegister';
 import { PublicPayment } from './pages/PublicPayment';
+import { ProtectedRoute, GuestRoute } from './components/ProtectedRoute';
 
 function App() {
     return (
         <Router>
             <Routes>
-                <Route path="/login" element={<Login />} />
+                {/* Guest-only Routes (Redirects to dashboard if already logged in) */}
+                <Route element={<GuestRoute />}>
+                    <Route path="/login" element={<Login />} />
+                </Route>
+
+                {/* Public Guest Routes */}
                 <Route path="/register" element={<PublicRegister />} />
                 <Route path="/payment" element={<PublicPayment />} />
                 <Route path="/payment/:customerId" element={<PublicPayment />} />
-                <Route path="/" element={<Layout />}>
-                    <Route index element={<Dashboard />} />
-                    <Route path="registrations" element={<Registrations />} />
-                    <Route path="registrations/new" element={<AdminRegister />} />
-                    <Route path="customers" element={<Customers />} />
-                    <Route path="packages" element={<Packages />} />
-                    <Route path="routers" element={<Routers />} />
-                    <Route path="invoices" element={<Invoices />} />
+
+                {/* Admin/NOC Protected Routes */}
+                <Route element={<ProtectedRoute allowedRoles={[1, 99]} />}>
+                    <Route path="/" element={<Layout />}>
+                        <Route index element={<Dashboard />} />
+                        <Route path="registrations" element={<Registrations />} />
+                        <Route path="registrations/new" element={<AdminRegister />} />
+                        <Route path="customers" element={<Customers />} />
+                        <Route path="packages" element={<Packages />} />
+                        <Route path="routers" element={<Routers />} />
+                        <Route path="invoices" element={<Invoices />} />
+                    </Route>
                 </Route>
             </Routes>
         </Router>

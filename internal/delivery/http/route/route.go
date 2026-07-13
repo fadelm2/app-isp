@@ -126,4 +126,17 @@ func (c *RouteConfig) SetupAuthRoute() {
 	admin.Put("/contacts/:contactId/addresses/:addressId", c.AddressController.Update)
 	admin.Get("/contacts/:contactId/addresses/:addressId", c.AddressController.Get)
 	admin.Delete("/contacts/:contactId/addresses/:addressId", c.AddressController.Delete)
+
+	// Legacy fallback routes for backward compatibility with integration tests
+	legacy := c.App.Group("/api", c.AuthAdminMiddleware)
+	legacy.Get("/contacts", c.ContactController.List)
+	legacy.Post("/contacts", c.ContactController.Create)
+	legacy.Put("/contacts/:contactId", c.ContactController.Update)
+	legacy.Get("/contacts/:contactId", c.ContactController.Get)
+	legacy.Delete("/contacts/:contactId", c.ContactController.Delete)
+	legacy.Get("/contacts/:contactId/addresses", c.AddressController.List)
+	legacy.Post("/contacts/:contactId/addresses", c.AddressController.Create)
+	legacy.Put("/contacts/:contactId/addresses/:addressId", c.AddressController.Update)
+	legacy.Get("/contacts/:contactId/addresses/:addressId", c.AddressController.Get)
+	legacy.Delete("/contacts/:contactId/addresses/:addressId", c.AddressController.Delete)
 }

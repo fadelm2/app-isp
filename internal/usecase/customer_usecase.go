@@ -54,18 +54,23 @@ func NewCustomerUseCase(
 	}
 }
 
-func (c *CustomerUseCase) List(ctx context.Context) ([]model.CustomerResponse, error) {
+func (c *CustomerUseCase) List(ctx context.Context, request *model.SearchCustomerRequest) ([]model.CustomerResponse, int64, error) {
 	tx := c.DB.WithContext(ctx)
-	customers, err := c.CustomerRepository.FindAll(tx)
+
+	if err := c.Validate.Struct(request); err != nil {
+		return nil, 0, fiber.ErrBadRequest
+	}
+
+	customers, total, err := c.CustomerRepository.Search(tx, request)
 	if err != nil {
-		return nil, fiber.ErrInternalServerError
+		return nil, 0, fiber.ErrInternalServerError
 	}
 
 	var responses []model.CustomerResponse
 	for _, cust := range customers {
 		responses = append(responses, converter.CustomerToResponse(&cust))
 	}
-	return responses, nil
+	return responses, total, nil
 }
 
 func (c *CustomerUseCase) Get(ctx context.Context, id string) (model.CustomerResponse, error) {
@@ -139,6 +144,11 @@ func (c *CustomerUseCase) Update(ctx context.Context, request *model.UpdateCusto
 
 	if request.DueDateDay != 0 {
 		customer.DueDateDay = request.DueDateDay
+	}
+
+	if request.OdpNumber != "" {
+		notes += fmt.Sprintf("ODP Number changed from %s to %s. ", customer.OdpNumber, request.OdpNumber)
+		customer.OdpNumber = request.OdpNumber
 	}
 
 	if err := c.CustomerRepository.Update(tx, customer); err != nil {
