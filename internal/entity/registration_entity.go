@@ -23,7 +23,7 @@ type Registration struct {
 	SupportingDocPath   string          `gorm:"column:supporting_doc_path"`
 	CreatedAt           int64           `gorm:"column:created_at;autoCreateTime:milli"`
 	UpdatedAt           int64           `gorm:"column:updated_at;autoCreateTime:milli;autoUpdateTime:milli"`
-	Package             InternetPackage `gorm:"foreignKey:package_id;references:id"`
+	Package             InternetPackage `gorm:"foreignKey:package_id;references:id;->"`
 }
 
 func (r *Registration) TableName() string {

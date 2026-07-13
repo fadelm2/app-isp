@@ -106,6 +106,9 @@ func TestRegisterDuplicate(t *testing.T) {
 }
 
 func TestLogin(t *testing.T) {
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("123457"), bcrypt.DefaultCost)
+	db.Exec("INSERT IGNORE INTO users (id, role_id, username, email, password, company_name, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+		"noc1", 1, "noc_user", "noc@greenet.id", string(hashedPassword), "GREENET", 1783899129160, 1783899129160)
 
 	requestBody := model.LoginUserRequest{
 		ID:       "noc1",
@@ -195,10 +198,10 @@ func TestLogout(t *testing.T) {
 	TestLogin(t) // login success
 
 	user := new(entity.User)
-	err := db.Where("id = ?", "Fadel").First(user).Error
+	err := db.Where("id = ?", "noc1").First(user).Error
 	assert.Nil(t, err)
 
-	request := httptest.NewRequest(http.MethodDelete, "/api/users", nil)
+	request := httptest.NewRequest(http.MethodDelete, "/api/admin/users", nil)
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Accept", "application/json")
 	request.Header.Set("Authorization", user.Token)
@@ -221,7 +224,7 @@ func TestLogoutWrongAuthorization(t *testing.T) {
 	//ClearAll()
 	TestLogin(t) // login success
 
-	request := httptest.NewRequest(http.MethodDelete, "/api/users", nil)
+	request := httptest.NewRequest(http.MethodDelete, "/api/admin/users", nil)
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Accept", "application/json")
 	request.Header.Set("Authorization", "wrong")
@@ -245,7 +248,7 @@ func TestGetCurrentUser(t *testing.T) {
 	TestLogin(t) // login success
 
 	user := new(entity.User)
-	err := db.Where("id = ?", "Fadel").First(user).Error
+	err := db.Where("id = ?", "noc1").First(user).Error
 	assert.Nil(t, err)
 
 	request := httptest.NewRequest(http.MethodGet, "/api/users/_current", nil)
@@ -299,7 +302,7 @@ func TestUpdateUserName(t *testing.T) {
 	TestLogin(t) // login success
 
 	user := new(entity.User)
-	err := db.Where("id = ?", "Fadel").First(user).Error
+	err := db.Where("id = ?", "noc1").First(user).Error
 	assert.Nil(t, err)
 
 	requestBody := model.UpdateUserRequest{
@@ -337,7 +340,7 @@ func TestUpdateUserPassword(t *testing.T) {
 	TestLogin(t) //login success
 
 	user := new(entity.User)
-	err := db.Where("id = ?", "Fadel").First(user).Error
+	err := db.Where("id = ?", "noc1").First(user).Error
 	assert.Nil(t, err)
 
 	requestBody := model.UpdateUserRequest{
@@ -368,7 +371,7 @@ func TestUpdateUserPassword(t *testing.T) {
 	assert.NotNil(t, responseBody.Data.UpdatedAt)
 
 	user = new(entity.User)
-	err = db.Where("id = ?", "Fadel").First(user).Error
+	err = db.Where("id = ?", "noc1").First(user).Error
 	assert.Nil(t, err)
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(requestBody.Password))

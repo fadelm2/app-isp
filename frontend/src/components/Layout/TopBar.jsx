@@ -3,7 +3,7 @@ import { Trophy, Maximize, MoreHorizontal, Menu } from 'lucide-react';
 import NotificationDropdown from '../Notifications/NotificationDropdown';
 import './TopBar.css';
 
-const TopBar = ({ onToggleSidebar }) => {
+const TopBar = ({ onToggleSidebar, currentUser }) => {
     return (
         <div className="topbar">
             <div className="greeting-section" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
@@ -11,8 +11,8 @@ const TopBar = ({ onToggleSidebar }) => {
                     <Menu size={24} />
                 </button>
                 <div>
-                    <h1>Welcome back, Jason!</h1>
-                    <p>Fleet Monitoring Dashboard</p>
+                    <h1>Welcome back, {currentUser ? currentUser.username : 'Admin'}!</h1>
+                    <p>ISP Management Dashboard</p>
                 </div>
             </div>
 

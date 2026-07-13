@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import './Sidebar.css';
 
-const Sidebar = ({ isOpen }) => {
+const Sidebar = ({ isOpen, currentUser }) => {
     const navigate = useNavigate();
 
     const handleLogout = async () => {
@@ -71,10 +71,10 @@ const Sidebar = ({ isOpen }) => {
             </nav>
 
             <div className="user-profile-bottom">
-                <img src="https://ui-avatars.com/api/?name=Admin+Greenet&background=0D8ABC&color=fff" alt="User" />
+                <img src={`https://ui-avatars.com/api/?name=${currentUser ? encodeURIComponent(currentUser.username) : 'Admin+Greenet'}&background=0D8ABC&color=fff`} alt="User" />
                 <div className="user-info">
-                    <div className="name">Admin Greenet</div>
-                    <div className="role">Administrator</div>
+                    <div className="name">{currentUser ? currentUser.username : 'Admin Greenet'}</div>
+                    <div className="role">{currentUser ? currentUser.id : 'Administrator'}</div>
                 </div>
             </div>
         </div>

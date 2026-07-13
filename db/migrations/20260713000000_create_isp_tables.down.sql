@@ -8,3 +8,5 @@ DROP TABLE IF EXISTS customers;
 DROP TABLE IF EXISTS routers;
 DROP TABLE IF EXISTS registrations;
 DROP TABLE IF EXISTS internet_packages;
+
+ALTER TABLE users DROP COLUMN IF EXISTS region_id;

@@ -77,3 +77,23 @@ func (c *InvoiceController) MidtransWebhook(ctx *fiber.Ctx) error {
 
 	return ctx.JSON(fiber.Map{"status": "ok"})
 }
+
+func (c *InvoiceController) ListPublicCustomerInvoices(ctx *fiber.Ctx) error {
+	customerId := ctx.Params("customerId")
+	response, err := c.UseCase.ListPublicCustomerInvoices(ctx.UserContext(), customerId)
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(model.WebResponse[[]model.InvoiceResponse]{Data: response})
+}
+
+func (c *InvoiceController) GetPublicSnapToken(ctx *fiber.Ctx) error {
+	id := ctx.Params("invoiceId")
+	token, err := c.UseCase.GetSnapToken(ctx.UserContext(), id)
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(model.WebResponse[string]{Data: token})
+}

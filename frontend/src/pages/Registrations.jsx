@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { adminService } from '../services/api';
 import { ClipboardList, Check, X, FileText, MapPin, Loader } from 'lucide-react';
 import './Pages.css';
@@ -7,6 +8,7 @@ export const Registrations = () => {
     const [registrations, setRegistrations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [updatingId, setUpdatingId] = useState(null);
+    const navigate = useNavigate();
 
     const fetchRegistrations = async () => {
         try {
@@ -42,6 +44,9 @@ export const Registrations = () => {
         <div className="page-container">
             <div className="page-header">
                 <h2>Customer Registrations</h2>
+                <button onClick={() => navigate('/registrations/new')} className="btn btn-primary">
+                    + Register Customer
+                </button>
             </div>
 
             {loading ? (

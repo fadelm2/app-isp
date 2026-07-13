@@ -14,8 +14,8 @@ type Customer struct {
 	DueDateDay     int             `gorm:"column:due_date_day"`
 	CreatedAt      int64           `gorm:"column:created_at;autoCreateTime:milli"`
 	UpdatedAt      int64           `gorm:"column:updated_at;autoCreateTime:milli;autoUpdateTime:milli"`
-	User           User            `gorm:"foreignKey:user_id;references:id"`
-	Package        InternetPackage `gorm:"foreignKey:package_id;references:id"`
+	User           User            `gorm:"foreignKey:user_id;references:id;->"`
+	Package        InternetPackage `gorm:"foreignKey:package_id;references:id;->"`
 	Router         *Router         `gorm:"foreignKey:router_id;references:id"`
 }
 

@@ -9,6 +9,8 @@ import { Routers } from './pages/Routers';
 import { Invoices } from './pages/Invoices';
 import { Login } from './pages/Login';
 import { PublicRegister } from './pages/PublicRegister';
+import { AdminRegister } from './pages/AdminRegister';
+import { PublicPayment } from './pages/PublicPayment';
 
 function App() {
     return (
@@ -16,9 +18,12 @@ function App() {
             <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<PublicRegister />} />
+                <Route path="/payment" element={<PublicPayment />} />
+                <Route path="/payment/:customerId" element={<PublicPayment />} />
                 <Route path="/" element={<Layout />}>
                     <Route index element={<Dashboard />} />
                     <Route path="registrations" element={<Registrations />} />
+                    <Route path="registrations/new" element={<AdminRegister />} />
                     <Route path="customers" element={<Customers />} />
                     <Route path="packages" element={<Packages />} />
                     <Route path="routers" element={<Routers />} />

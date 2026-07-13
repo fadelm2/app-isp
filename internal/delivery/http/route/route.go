@@ -38,6 +38,8 @@ func (c *RouteConfig) SetupGuestRoute() {
 	c.App.Post("/api/registrations", c.RegistrationController.Create)
 	c.App.Post("/api/webhook/midtrans", c.InvoiceController.MidtransWebhook)
 	c.App.Get("/api/packages", c.PackageController.List)
+	c.App.Get("/api/public/customers/:customerId/invoices", c.InvoiceController.ListPublicCustomerInvoices)
+	c.App.Get("/api/public/invoices/:invoiceId/pay", c.InvoiceController.GetPublicSnapToken)
 }
 
 func (c *RouteConfig) SetupAuthAdminRoute() {

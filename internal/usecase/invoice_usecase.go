@@ -262,3 +262,30 @@ func (c *InvoiceUseCase) ListByCustomer(ctx context.Context, customerId string) 
 	}
 	return responses, nil
 }
+
+func (c *InvoiceUseCase) ListPublicCustomerInvoices(ctx context.Context, customerID string) ([]model.InvoiceResponse, error) {
+	tx := c.DB.WithContext(ctx)
+
+	customer := new(entity.Customer)
+	if err := c.CustomerRepository.FindById(tx, customer, customerID); err != nil {
+		c.Log.Warnf("Public invoice query failed: customer %s not found", customerID)
+		return nil, fiber.ErrNotFound
+	}
+
+	var invoices []entity.Invoice
+	err := tx.Preload("Customer.User").
+		Preload("Customer.Package").
+		Where("customer_id = ? AND (status = ? OR status = ?)", customerID, "pending", "owed").
+		Find(&invoices).Error
+
+	if err != nil {
+		c.Log.Errorf("Failed to list public invoices: %v", err)
+		return nil, fiber.ErrInternalServerError
+	}
+
+	var responses []model.InvoiceResponse
+	for _, inv := range invoices {
+		responses = append(responses, converter.InvoiceToResponse(&inv))
+	}
+	return responses, nil
+}

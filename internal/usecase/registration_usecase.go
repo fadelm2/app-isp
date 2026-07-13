@@ -106,11 +106,11 @@ func (c *RegistrationUseCase) Create(ctx context.Context, request *model.CreateR
 
 	if err := c.RegistrationRepository.Create(tx, reg); err != nil {
 		c.Log.Errorf("Failed to save registration: %+v", err)
-		return model.RegistrationResponse{}, fiber.ErrInternalServerError
+		return model.RegistrationResponse{}, err
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		return model.RegistrationResponse{}, fiber.ErrInternalServerError
+		return model.RegistrationResponse{}, err
 	}
 
 	reg.Package = *pkg
