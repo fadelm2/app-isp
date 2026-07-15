@@ -36,6 +36,7 @@ export const PublicRegister = () => {
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [error, setError] = useState('');
+    const [ispName, setIspName] = useState(localStorage.getItem('isp_name') || 'GREENET');
 
     useEffect(() => {
         const fetchPackages = async () => {
@@ -54,6 +55,16 @@ export const PublicRegister = () => {
                 setLoadingPackages(false);
             }
         };
+
+        publicService.getIspInfo()
+            .then(res => {
+                if (res.data && res.data.isp_name) {
+                    setIspName(res.data.isp_name);
+                    localStorage.setItem('isp_name', res.data.isp_name);
+                }
+            })
+            .catch(err => console.error("Error fetching ISP info:", err));
+
         fetchPackages();
     }, []);
 
@@ -156,7 +167,7 @@ export const PublicRegister = () => {
                     <CheckCircle2 size={64} className="success-icon" />
                     <h2>Pendaftaran Berhasil!</h2>
                     <p className="success-message">
-                        Terima kasih telah memilih <strong>GREENET</strong>. Data dan dokumen pendaftaran Anda telah berhasil dikirim dan sedang dalam proses review oleh tim verifikator kami.
+                        Terima kasih telah memilih <strong>{ispName.toUpperCase()}</strong>. Data dan dokumen pendaftaran Anda telah berhasil dikirim dan sedang dalam proses review oleh tim verifikator kami.
                     </p>
                     <div className="next-steps">
                         <h4>Langkah Selanjutnya:</h4>
@@ -175,7 +186,7 @@ export const PublicRegister = () => {
         <div className="pub-reg-wrapper">
             <div className="pub-reg-card">
                 <div className="pub-reg-header">
-                    <h2>GREENET</h2>
+                    <h2>{ispName.toUpperCase()}</h2>
                     <p className="subtitle">Formulir Pendaftaran Pelanggan Baru</p>
                 </div>
 

@@ -1,6 +1,7 @@
 package route
 
 import (
+	"os"
 	"golang-clean-architecture/internal/delivery/http"
 
 	"github.com/gofiber/fiber/v2"
@@ -40,6 +41,16 @@ func (c *RouteConfig) SetupGuestRoute() {
 	c.App.Get("/api/packages", c.PackageController.List)
 	c.App.Get("/api/public/customers/:customerId/invoices", c.InvoiceController.ListPublicCustomerInvoices)
 	c.App.Get("/api/public/invoices/:invoiceId/pay", c.InvoiceController.GetPublicSnapToken)
+	c.App.Get("/api/public/invoices/:invoiceId/pdf", c.InvoiceController.DownloadPDF)
+	c.App.Get("/api/isp-info", func(ctx *fiber.Ctx) error {
+		ispName := os.Getenv("ISP_NAME")
+		if ispName == "" {
+			ispName = "GREENET"
+		}
+		return ctx.JSON(fiber.Map{
+			"isp_name": ispName,
+		})
+	})
 }
 
 func (c *RouteConfig) SetupAuthAdminRoute() {
@@ -83,6 +94,12 @@ func (c *RouteConfig) SetupAuthAdminRoute() {
 	admin.Get("/invoices", c.InvoiceController.List)
 	admin.Post("/invoices", c.InvoiceController.Create)
 	admin.Get("/invoices/:invoiceId", c.InvoiceController.Get)
+	admin.Get("/invoices/:invoiceId/pdf", c.InvoiceController.DownloadPDF)
+	admin.Post("/invoices/:invoiceId/send-whatsapp", c.InvoiceController.SendInvoiceWhatsAppByID)
+	admin.Post("/invoices/:invoiceId/send-email", c.InvoiceController.SendInvoiceEmailByID)
+
+	admin.Post("/customers/:customerId/send-invoice-whatsapp", c.InvoiceController.SendInvoiceWhatsApp)
+	admin.Post("/customers/:customerId/send-invoice-email", c.InvoiceController.SendInvoiceEmail)
 }
 
 func (c *RouteConfig) SetupAuthDriverRoute() {

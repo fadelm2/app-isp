@@ -69,7 +69,7 @@ func Bootstrap(config *BootstrapConfig) {
 
 	pkgUseCase := usecase.NewPackageUseCase(config.DB, config.Log, config.Validate, packageRepo)
 	custUseCase := usecase.NewCustomerUseCase(config.DB, config.Log, config.Validate, custRepo, packageRepo, routerRepo, radRepo, histRepo, mkClient)
-	invUseCase := usecase.NewInvoiceUseCase(config.DB, config.Log, config.Validate, invRepo, custRepo, payRepo, mtClient, custUseCase)
+	invUseCase := usecase.NewInvoiceUseCase(config.DB, config.Log, config.Validate, invRepo, custRepo, payRepo, mtClient, custUseCase, notifClient)
 	regUseCase := usecase.NewRegistrationUseCase(config.DB, config.Log, config.Validate, regRepo, packageRepo, userRepository, custRepo, radRepo, routerRepo, invRepo, mkClient, notifClient)
 	routerUseCase := usecase.NewRouterUseCase(config.DB, config.Log, config.Validate, routerRepo, mkClient)
 	dashboardUseCase := usecase.NewDashboardUseCase(config.DB, config.Log, custRepo, invRepo, routerRepo, radRepo)

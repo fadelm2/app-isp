@@ -12,8 +12,21 @@ import { PublicRegister } from './pages/PublicRegister';
 import { AdminRegister } from './pages/AdminRegister';
 import { PublicPayment } from './pages/PublicPayment';
 import { ProtectedRoute, GuestRoute } from './components/ProtectedRoute';
+import { useEffect } from 'react';
+import { publicService } from './services/api';
 
 function App() {
+    useEffect(() => {
+        publicService.getIspInfo()
+            .then(res => {
+                if (res.data && res.data.isp_name) {
+                    localStorage.setItem('isp_name', res.data.isp_name);
+                    document.title = `${res.data.isp_name} - ISP Management System`;
+                }
+            })
+            .catch(err => console.error("Error fetching ISP info:", err));
+    }, []);
+
     return (
         <Router>
             <Routes>

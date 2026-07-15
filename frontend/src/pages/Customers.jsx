@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { adminService } from '../services/api';
-import { ShieldAlert, ShieldCheck, PowerOff, History, Eye, Edit, Save, X, FileImage, MapPin } from 'lucide-react';
+import { ShieldAlert, ShieldCheck, PowerOff, History, Eye, Edit, Save, X, FileImage, MapPin, Mail, MessageCircle } from 'lucide-react';
 import './Pages.css';
 
 export const Customers = () => {
@@ -142,6 +142,24 @@ export const Customers = () => {
             }
         } catch (error) {
             alert("Failed to terminate customer: " + (error.response?.data?.error || error.message));
+        }
+    };
+
+    const handleSendWhatsApp = async (id) => {
+        try {
+            await adminService.sendCustomerInvoiceWhatsApp(id);
+            alert("Invoice notification sent via WhatsApp successfully!");
+        } catch (error) {
+            alert("Failed to send WhatsApp notification: " + (error.response?.data?.error || error.message));
+        }
+    };
+
+    const handleSendEmail = async (id) => {
+        try {
+            await adminService.sendCustomerInvoiceEmail(id);
+            alert("Invoice notification sent via Email successfully!");
+        } catch (error) {
+            alert("Failed to send Email notification: " + (error.response?.data?.error || error.message));
         }
     };
 
@@ -290,7 +308,23 @@ export const Customers = () => {
                                                     className="btn btn-secondary btn-sm"
                                                     title="View/Edit Profile"
                                                 >
-                                                    <Eye size={14} /> Detail / Edit
+                                                    <Eye size={14} /> Detail
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleSendWhatsApp(cust.id)}
+                                                    className="btn btn-success btn-sm"
+                                                    title="Send WhatsApp Invoice"
+                                                    disabled={cust.status === 'terminated'}
+                                                >
+                                                    <MessageCircle size={14} /> WA
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleSendEmail(cust.id)}
+                                                    className="btn btn-primary btn-sm"
+                                                    title="Send Email Invoice"
+                                                    disabled={cust.status === 'terminated'}
+                                                >
+                                                    <Mail size={14} /> Email
                                                 </button>
                                                 <button 
                                                     onClick={() => handleViewHistory(cust.id, cust.user?.name)} 
@@ -520,7 +554,7 @@ export const Customers = () => {
                                     
                                     <div className="info-row">
                                         <span className="label">Company Name:</span>
-                                        <span className="val">{selectedCust.user?.company_name || 'GREENET'}</span>
+                                        <span className="val">{selectedCust.user?.company_name || localStorage.getItem('isp_name') || 'GREENET'}</span>
                                     </div>
                                 </div>
 

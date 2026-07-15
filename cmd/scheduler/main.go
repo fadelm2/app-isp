@@ -8,15 +8,19 @@ import (
 	"golang-clean-architecture/internal/config"
 	"golang-clean-architecture/internal/entity"
 	"golang-clean-architecture/internal/gateway/mikrotik"
+	"golang-clean-architecture/internal/gateway/notification"
 	"golang-clean-architecture/internal/model"
 	"golang-clean-architecture/internal/repository"
 	"golang-clean-architecture/internal/usecase"
 
 	"github.com/sirupsen/logrus"
+	"github.com/subosito/gotenv"
 	"gorm.io/gorm"
 )
 
 func main() {
+	gotenv.Load()
+
 	viperConfig := config.NewViper()
 	log := config.NewLogger(viperConfig)
 	db := config.NewDatabase(viperConfig, log)
@@ -33,9 +37,10 @@ func main() {
 	payRepo := repository.NewPaymentRepository(log)
 
 	mkClient := mikrotik.NewMikrotikClient(log)
+	notifClient := notification.NewNotificationClient(log)
 
 	custUseCase := usecase.NewCustomerUseCase(db, log, validate, custRepo, packageRepo, routerRepo, radRepo, histRepo, mkClient)
-	invUseCase := usecase.NewInvoiceUseCase(db, log, validate, invRepo, custRepo, payRepo, nil, custUseCase)
+	invUseCase := usecase.NewInvoiceUseCase(db, log, validate, invRepo, custRepo, payRepo, nil, custUseCase, notifClient)
 
 	ctx := context.Background()
 
@@ -55,31 +60,12 @@ func runSchedulerTasks(ctx context.Context, db *gorm.DB, log *logrus.Logger, inv
 	log.Info("[Scheduler] Running recurring tasks...")
 
 	// 1. Generate Monthly Invoices
-	generateMonthlyInvoices(ctx, db, log, invUseCase)
+	if err := invUseCase.AutoGenerateInvoices(ctx); err != nil {
+		log.Errorf("Scheduler failed to auto generate invoices: %v", err)
+	}
 
 	// 2. Suspend Owed Customers
 	suspendOwedCustomers(ctx, db, log, custUseCase)
-}
-
-func generateMonthlyInvoices(ctx context.Context, db *gorm.DB, log *logrus.Logger, invUseCase *usecase.InvoiceUseCase) {
-	var customers []entity.Customer
-	if err := db.Where("status = ?", "active").Find(&customers).Error; err != nil {
-		log.Errorf("Scheduler failed to load customers: %v", err)
-		return
-	}
-
-	now := time.Now()
-	for _, cust := range customers {
-		// Attempt to create invoice for the current month and year
-		_, err := invUseCase.Create(ctx, &model.CreateInvoiceRequest{
-			CustomerID:  cust.ID,
-			PeriodMonth: int(now.Month()),
-			PeriodYear:  now.Year(),
-		})
-		if err == nil {
-			log.Infof("[Scheduler] Auto-generated monthly invoice for customer: %s", cust.ID)
-		}
-	}
 }
 
 func suspendOwedCustomers(ctx context.Context, db *gorm.DB, log *logrus.Logger, custUseCase *usecase.CustomerUseCase) {

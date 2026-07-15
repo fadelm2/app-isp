@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { adminService, customerService } from '../services/api';
-import { Plus, CreditCard, RefreshCw } from 'lucide-react';
+import { Plus, CreditCard, RefreshCw, Mail, MessageCircle, Download } from 'lucide-react';
 import './Invoices.css';
 import './Pages.css';
 
@@ -96,6 +96,28 @@ export const Invoices = () => {
         }
     };
 
+    const handleSendWhatsApp = async (id) => {
+        try {
+            await adminService.sendInvoiceWhatsApp(id);
+            alert("Invoice sent via WhatsApp successfully!");
+        } catch (error) {
+            alert("Failed to send: " + (error.response?.data?.error || error.message));
+        }
+    };
+
+    const handleSendEmail = async (id) => {
+        try {
+            await adminService.sendInvoiceEmail(id);
+            alert("Invoice sent via Email successfully!");
+        } catch (error) {
+            alert("Failed to send: " + (error.response?.data?.error || error.message));
+        }
+    };
+
+    const handleDownloadPDF = (id) => {
+        window.open(`/api/public/invoices/${id}/pdf`, "_blank");
+    };
+
     const formatRupiah = (val) => {
         return new Intl.NumberFormat('id-ID', {
             style: 'currency',
@@ -131,6 +153,7 @@ export const Invoices = () => {
                                 <th>Total Bill</th>
                                 <th>Status</th>
                                 <th>Payment</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -164,6 +187,31 @@ export const Invoices = () => {
                                         ) : (
                                             <span className="text-muted small">N/A</span>
                                         )}
+                                    </td>
+                                    <td>
+                                        <div className="action-buttons" style={{ display: 'flex', gap: '6px' }}>
+                                            <button 
+                                                onClick={() => handleDownloadPDF(inv.id)} 
+                                                className="btn btn-secondary btn-sm"
+                                                title="Download PDF"
+                                            >
+                                                <Download size={14} /> PDF
+                                            </button>
+                                            <button 
+                                                onClick={() => handleSendWhatsApp(inv.id)} 
+                                                className="btn btn-success btn-sm"
+                                                title="Send WhatsApp"
+                                            >
+                                                <MessageCircle size={14} />
+                                            </button>
+                                            <button 
+                                                onClick={() => handleSendEmail(inv.id)} 
+                                                className="btn btn-primary btn-sm"
+                                                title="Send Email"
+                                            >
+                                                <Mail size={14} />
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}

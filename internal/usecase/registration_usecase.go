@@ -189,7 +189,7 @@ func (c *RegistrationUseCase) UpdateStatus(ctx context.Context, request *model.U
 
 func (c *RegistrationUseCase) processApproval(tx *gorm.DB, reg *entity.Registration, adminUserID string) error {
 	// 1. Create a User for the Customer
-	userPassword := fmt.Sprintf("Greenet%s", reg.NIK[len(reg.NIK)-4:]) // Last 4 digits of NIK
+	userPassword := fmt.Sprintf("%s%s", util.GetISPName(), reg.NIK[len(reg.NIK)-4:]) // Last 4 digits of NIK
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(userPassword), bcrypt.DefaultCost)
 	if err != nil {
 		return err
@@ -202,7 +202,7 @@ func (c *RegistrationUseCase) processApproval(tx *gorm.DB, reg *entity.Registrat
 		Name:        reg.FullName,
 		Email:       reg.Email,
 		RoleID:      "2", // Customers
-		CompanyName: "GREENET",
+		CompanyName: util.GetISPNameUpper(),
 	}
 
 	if err := c.UserRepository.Create(tx, user); err != nil {
@@ -328,7 +328,7 @@ func (c *RegistrationUseCase) processApproval(tx *gorm.DB, reg *entity.Registrat
 	}
 
 	// Send notification
-	notifMsg := fmt.Sprintf("Halo %s, pendaftaran Greenet Anda disetujui. Akun Anda: %s, Password: %s. Silakan bayar tagihan pertama sebesar Rp %d melalui portal untuk mengaktifkan internet.", reg.FullName, reg.Email, userPassword, int(total))
+	notifMsg := fmt.Sprintf("Halo %s, pendaftaran %s Anda disetujui. Akun Anda: %s, Password: %s. Silakan bayar tagihan pertama sebesar Rp %d melalui portal untuk mengaktifkan internet.", reg.FullName, util.GetISPName(), reg.Email, userPassword, int(total))
 	go c.NotificationClient.SendWhatsApp(reg.Phone, notifMsg)
 
 	return nil

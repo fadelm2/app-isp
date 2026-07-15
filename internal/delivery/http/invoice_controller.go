@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"golang-clean-architecture/internal/model"
 	"golang-clean-architecture/internal/usecase"
 
@@ -96,4 +97,60 @@ func (c *InvoiceController) GetPublicSnapToken(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.JSON(model.WebResponse[string]{Data: token})
+}
+
+func (c *InvoiceController) DownloadPDF(ctx *fiber.Ctx) error {
+	id := ctx.Params("invoiceId")
+	pdfBytes, err := c.UseCase.GetPDFData(ctx.UserContext(), id)
+	if err != nil {
+		return err
+	}
+
+	ctx.Set("Content-Type", "application/pdf")
+	ctx.Set("Content-Disposition", fmt.Sprintf("attachment; filename=invoice-%s.pdf", id))
+	return ctx.Send(pdfBytes)
+}
+
+func (c *InvoiceController) SendInvoiceWhatsApp(ctx *fiber.Ctx) error {
+	customerId := ctx.Params("customerId")
+	baseURL := ctx.BaseURL()
+	err := c.UseCase.SendLatestInvoiceWhatsApp(ctx.UserContext(), customerId, baseURL)
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(model.WebResponse[string]{Data: "Invoice sent via WhatsApp successfully"})
+}
+
+func (c *InvoiceController) SendInvoiceEmail(ctx *fiber.Ctx) error {
+	customerId := ctx.Params("customerId")
+	baseURL := ctx.BaseURL()
+	err := c.UseCase.SendLatestInvoiceEmail(ctx.UserContext(), customerId, baseURL)
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(model.WebResponse[string]{Data: "Invoice sent via Email successfully"})
+}
+
+func (c *InvoiceController) SendInvoiceWhatsAppByID(ctx *fiber.Ctx) error {
+	invoiceId := ctx.Params("invoiceId")
+	baseURL := ctx.BaseURL()
+	err := c.UseCase.SendInvoiceWhatsApp(ctx.UserContext(), invoiceId, baseURL)
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(model.WebResponse[string]{Data: "Invoice sent via WhatsApp successfully"})
+}
+
+func (c *InvoiceController) SendInvoiceEmailByID(ctx *fiber.Ctx) error {
+	invoiceId := ctx.Params("invoiceId")
+	baseURL := ctx.BaseURL()
+	err := c.UseCase.SendInvoiceEmail(ctx.UserContext(), invoiceId, baseURL)
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(model.WebResponse[string]{Data: "Invoice sent via Email successfully"})
 }

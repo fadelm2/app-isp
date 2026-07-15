@@ -27,6 +27,7 @@ export const authService = {
 
 export const publicService = {
     getPackages: () => api.get('/packages'),
+    getIspInfo: () => api.get('/isp-info'),
     register: (formData) => api.post('/registrations', formData, {
         headers: {
             'Content-Type': 'multipart/form-data'
@@ -68,6 +69,10 @@ export const adminService = {
     getInvoices: () => api.get('/admin/invoices'),
     createInvoice: (data) => api.post('/admin/invoices', data),
     getInvoice: (id) => api.get(`/admin/invoices/${id}`),
+    sendInvoiceWhatsApp: (id) => api.post(`/admin/invoices/${id}/send-whatsapp`),
+    sendInvoiceEmail: (id) => api.post(`/admin/invoices/${id}/send-email`),
+    sendCustomerInvoiceWhatsApp: (customerId) => api.post(`/admin/customers/${customerId}/send-invoice-whatsapp`),
+    sendCustomerInvoiceEmail: (customerId) => api.post(`/admin/customers/${customerId}/send-invoice-email`),
 };
 
 export const customerService = {

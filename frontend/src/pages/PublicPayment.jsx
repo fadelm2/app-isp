@@ -17,6 +17,18 @@ export function PublicPayment() {
 	const [payingId, setPayingId] = useState(null);
 	const [error, setError] = useState('');
 	const [searchVal, setSearchVal] = useState('');
+	const [ispName, setIspName] = useState(localStorage.getItem('isp_name') || 'GREENET');
+
+	useEffect(() => {
+		axios.get('/api/isp-info')
+			.then(res => {
+				if (res.data && res.data.isp_name) {
+					setIspName(res.data.isp_name);
+					localStorage.setItem('isp_name', res.data.isp_name);
+				}
+			})
+			.catch(err => console.error("Error fetching ISP info:", err));
+	}, []);
 
 	// Load Midtrans Snap Script
 	useEffect(() => {
@@ -113,7 +125,7 @@ export function PublicPayment() {
 		<div className="pub-payment-container">
 			<div className="pub-payment-card">
 				<div className="pub-payment-header">
-					<div className="brand-logo">GREENET</div>
+					<div className="brand-logo">{ispName.toUpperCase()}</div>
 					<h2>Quick Bill Payment Portal</h2>
 					<p>Pay your internet service invoices instantly using safe online payment channels</p>
 				</div>
