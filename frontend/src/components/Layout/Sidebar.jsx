@@ -26,13 +26,15 @@ const Sidebar = ({ isOpen, currentUser }) => {
         navigate('/login');
     };
 
+    const ispName = localStorage.getItem('isp_name') || 'GREENET';
+
     return (
         <div className={`sidebar ${isOpen ? '' : 'collapsed'}`}>
             <div className="brand">
                 <div className="logo-icon">
                     <div className="grid-icon"></div>
                 </div>
-                <span className="brand-name">GREENET</span>
+                <span className="brand-name">{ispName.toUpperCase()}</span>
             </div>
 
             <nav className="nav-menu">
@@ -71,9 +73,9 @@ const Sidebar = ({ isOpen, currentUser }) => {
             </nav>
 
             <div className="user-profile-bottom">
-                <img src={`https://ui-avatars.com/api/?name=${currentUser ? encodeURIComponent(currentUser.username) : 'Admin+Greenet'}&background=0D8ABC&color=fff`} alt="User" />
+                <img src={`https://ui-avatars.com/api/?name=${currentUser ? encodeURIComponent(currentUser.username) : `Admin+${encodeURIComponent(ispName)}`}&background=0D8ABC&color=fff`} alt="User" />
                 <div className="user-info">
-                    <div className="name">{currentUser ? currentUser.username : 'Admin Greenet'}</div>
+                    <div className="name">{currentUser ? currentUser.username : `Admin ${ispName}`}</div>
                     <div className="role">{currentUser ? currentUser.id : 'Administrator'}</div>
                 </div>
             </div>

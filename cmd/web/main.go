@@ -3,9 +3,13 @@ package main
 import (
 	"fmt"
 	"golang-clean-architecture/internal/config"
+
+	"github.com/subosito/gotenv"
 )
 
 func main() {
+	gotenv.Load()
+
 	viperConfig := config.NewViper()
 	log := config.NewLogger(viperConfig)
 	db := config.NewDatabase(viperConfig, log)

@@ -41,6 +41,7 @@ require (
 	github.com/spf13/viper v1.18.1 // indirect
 	github.com/stretchr/objx v0.5.1 // indirect
 	github.com/stretchr/testify v1.8.4 // indirect
+	github.com/jung-kurt/gofpdf v1.16.2
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.51.0 // indirect

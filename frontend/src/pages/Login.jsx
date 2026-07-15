@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authService } from '../services/api';
+import { authService, publicService } from '../services/api';
 import { Shield, Lock, User, AlertCircle } from 'lucide-react';
 import './Login.css';
 
@@ -10,6 +10,18 @@ export const Login = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const [ispName, setIspName] = useState(localStorage.getItem('isp_name') || 'GREENET');
+
+    useEffect(() => {
+        publicService.getIspInfo()
+            .then(res => {
+                if (res.data && res.data.isp_name) {
+                    setIspName(res.data.isp_name);
+                    localStorage.setItem('isp_name', res.data.isp_name);
+                }
+            })
+            .catch(err => console.error("Error fetching ISP info:", err));
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -41,7 +53,7 @@ export const Login = () => {
                     <div className="login-logo">
                         <Shield size={32} className="logo-icon-purple" />
                     </div>
-                    <h2>GREENET</h2>
+                    <h2>{ispName.toUpperCase()}</h2>
                     <p className="subtitle">ISP Management Portal</p>
                 </div>
 
@@ -87,7 +99,7 @@ export const Login = () => {
                 </form>
 
                 <div className="login-footer">
-                    <p className="text-muted small">GREENET OSS/BSS System v1.0.0</p>
+                    <p className="text-muted small">{ispName.toUpperCase()} OSS/BSS System v1.0.0</p>
                 </div>
             </div>
         </div>

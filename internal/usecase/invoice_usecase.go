@@ -6,13 +6,16 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"golang-clean-architecture/internal/entity"
 	"golang-clean-architecture/internal/gateway/midtrans"
+	"golang-clean-architecture/internal/gateway/notification"
 	"golang-clean-architecture/internal/model"
 	"golang-clean-architecture/internal/model/converter"
 	"golang-clean-architecture/internal/repository"
+	"golang-clean-architecture/internal/util"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -30,6 +33,7 @@ type InvoiceUseCase struct {
 	PaymentRepository  *repository.PaymentRepository
 	MidtransClient     *midtrans.MidtransClient
 	CustomerUseCase    *CustomerUseCase
+	NotificationClient *notification.NotificationClient
 }
 
 func NewInvoiceUseCase(
@@ -41,6 +45,7 @@ func NewInvoiceUseCase(
 	payRepo *repository.PaymentRepository,
 	mtClient *midtrans.MidtransClient,
 	custUseCase *CustomerUseCase,
+	notifClient *notification.NotificationClient,
 ) *InvoiceUseCase {
 	return &InvoiceUseCase{
 		DB:                 db,
@@ -51,6 +56,7 @@ func NewInvoiceUseCase(
 		PaymentRepository:  payRepo,
 		MidtransClient:     mtClient,
 		CustomerUseCase:    custUseCase,
+		NotificationClient: notifClient,
 	}
 }
 
@@ -288,4 +294,247 @@ func (c *InvoiceUseCase) ListPublicCustomerInvoices(ctx context.Context, custome
 		responses = append(responses, converter.InvoiceToResponse(&inv))
 	}
 	return responses, nil
+}
+
+func (c *InvoiceUseCase) AutoGenerateInvoices(ctx context.Context) error {
+	tx := c.DB.WithContext(ctx)
+
+	// Load all active customers
+	var customers []entity.Customer
+	if err := tx.Preload("Package").Where("status = ?", "active").Find(&customers).Error; err != nil {
+		c.Log.Errorf("Failed to find active customers: %v", err)
+		return err
+	}
+
+	now := time.Now()
+	for _, cust := range customers {
+		// 1. Check if invoice for current month and year exists
+		var count int64
+		tx.Model(&entity.Invoice{}).Where("customer_id = ? AND period_month = ? AND period_year = ?", cust.ID, int(now.Month()), now.Year()).Count(&count)
+
+		if count == 0 {
+			// Generate invoice for current period
+			_, err := c.Create(ctx, &model.CreateInvoiceRequest{
+				CustomerID:  cust.ID,
+				PeriodMonth: int(now.Month()),
+				PeriodYear:  now.Year(),
+			})
+			if err != nil {
+				c.Log.Errorf("Failed to auto-generate current invoice for customer %s: %v", cust.ID, err)
+			} else {
+				c.Log.Infof("Auto-generated current period invoice for customer %s", cust.ID)
+			}
+			continue // move to next customer
+		}
+
+		// 2. If current invoice exists, check if due date is within 5 days (or past due date)
+		var currentInvoice entity.Invoice
+		err := tx.Where("customer_id = ? AND period_month = ? AND period_year = ?", cust.ID, int(now.Month()), now.Year()).First(&currentInvoice).Error
+		if err == nil {
+			dueDate := time.UnixMilli(currentInvoice.DueDate)
+			// 5 days before due date means: now is >= due_date - 5 days
+			fiveDaysBefore := dueDate.AddDate(0, 0, -5)
+
+			if now.After(fiveDaysBefore) || now.Equal(fiveDaysBefore) {
+				// Check if invoice for the NEXT month already exists
+				nextMonth := int(now.Month()) + 1
+				nextYear := now.Year()
+				if nextMonth > 12 {
+					nextMonth = 1
+					nextYear = now.Year() + 1
+				}
+
+				var nextCount int64
+				tx.Model(&entity.Invoice{}).Where("customer_id = ? AND period_month = ? AND period_year = ?", cust.ID, nextMonth, nextYear).Count(&nextCount)
+
+				if nextCount == 0 {
+					_, err := c.Create(ctx, &model.CreateInvoiceRequest{
+						CustomerID:  cust.ID,
+						PeriodMonth: nextMonth,
+						PeriodYear:  nextYear,
+					})
+					if err != nil {
+						c.Log.Errorf("Failed to auto-generate next invoice for customer %s: %v", cust.ID, err)
+					} else {
+						c.Log.Infof("Auto-generated next period invoice for customer %s", cust.ID)
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (c *InvoiceUseCase) SendLatestInvoiceWhatsApp(ctx context.Context, customerId string, baseURL string) error {
+	tx := c.DB.WithContext(ctx)
+
+	customer := new(entity.Customer)
+	if err := c.CustomerRepository.FindByIdWithDetails(tx, customer, customerId); err != nil {
+		return fiber.ErrNotFound
+	}
+
+	phone := ""
+	if customer.Registration != nil && customer.Registration.Phone != "" {
+		phone = customer.Registration.Phone
+	} else {
+		var contacts []entity.Contact
+		if err := tx.Where("user_id = ?", customer.UserID).Find(&contacts).Error; err == nil && len(contacts) > 0 {
+			phone = contacts[0].Phone
+		}
+	}
+
+	if phone == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "Customer phone number not found")
+	}
+
+	var latestInvoice entity.Invoice
+	if err := tx.Where("customer_id = ?", customer.ID).Order("created_at DESC").First(&latestInvoice).Error; err != nil {
+		return fiber.NewError(fiber.StatusNotFound, "No invoice found for this customer")
+	}
+
+	ispName := util.GetISPName()
+	pdfLink := fmt.Sprintf("%s/api/public/invoices/%s/pdf", baseURL, latestInvoice.ID)
+
+	message := fmt.Sprintf("Halo %s, berikut tagihan internet %s Anda untuk periode %02d/%d sebesar Rp %s. Silakan bayar sebelum %s.\nLink PDF: %s",
+		customer.User.Name,
+		ispName,
+		latestInvoice.PeriodMonth,
+		latestInvoice.PeriodYear,
+		formatPriceStr(latestInvoice.TotalAmount),
+		time.UnixMilli(latestInvoice.DueDate).Format("02-01-2006"),
+		pdfLink,
+	)
+
+	return c.NotificationClient.SendWhatsApp(phone, message)
+}
+
+func (c *InvoiceUseCase) SendLatestInvoiceEmail(ctx context.Context, customerId string, baseURL string) error {
+	tx := c.DB.WithContext(ctx)
+
+	customer := new(entity.Customer)
+	if err := c.CustomerRepository.FindByIdWithDetails(tx, customer, customerId); err != nil {
+		return fiber.ErrNotFound
+	}
+
+	email := customer.User.Email
+	if email == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "Customer email not found")
+	}
+
+	var latestInvoice entity.Invoice
+	if err := tx.Where("customer_id = ?", customer.ID).Order("created_at DESC").First(&latestInvoice).Error; err != nil {
+		return fiber.NewError(fiber.StatusNotFound, "No invoice found for this customer")
+	}
+
+	ispName := util.GetISPName()
+	pdfLink := fmt.Sprintf("%s/api/public/invoices/%s/pdf", baseURL, latestInvoice.ID)
+
+	subject := fmt.Sprintf("Tagihan Internet %s - Invoice %s", ispName, latestInvoice.ID)
+	body := fmt.Sprintf("Halo %s,\n\nTerima kasih telah menggunakan layanan internet %s.\n\nBerikut rincian tagihan Anda:\n- Invoice ID: %s\n- Periode: %02d/%d\n- Total Tagihan: Rp %s\n- Jatuh Tempo: %s\n\nAnda dapat mengunduh invoice PDF Anda di sini: %s\n\nSilakan lakukan pembayaran melalui portal pelanggan.\n\nSalam hangat,\n%s",
+		customer.User.Name,
+		ispName,
+		latestInvoice.ID,
+		latestInvoice.PeriodMonth,
+		latestInvoice.PeriodYear,
+		formatPriceStr(latestInvoice.TotalAmount),
+		time.UnixMilli(latestInvoice.DueDate).Format("02-01-2006"),
+		pdfLink,
+		ispName,
+	)
+
+	return c.NotificationClient.SendEmail(email, subject, body)
+}
+
+func (c *InvoiceUseCase) SendInvoiceWhatsApp(ctx context.Context, invoiceId string, baseURL string) error {
+	tx := c.DB.WithContext(ctx)
+
+	invoice := new(entity.Invoice)
+	if err := c.InvoiceRepository.FindByIdWithDetails(tx, invoice, invoiceId); err != nil {
+		return fiber.ErrNotFound
+	}
+
+	phone := ""
+	if invoice.Customer.Registration != nil && invoice.Customer.Registration.Phone != "" {
+		phone = invoice.Customer.Registration.Phone
+	} else {
+		var contacts []entity.Contact
+		if err := tx.Where("user_id = ?", invoice.Customer.UserID).Find(&contacts).Error; err == nil && len(contacts) > 0 {
+			phone = contacts[0].Phone
+		}
+	}
+
+	if phone == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "Customer phone number not found")
+	}
+
+	ispName := util.GetISPName()
+	pdfLink := fmt.Sprintf("%s/api/public/invoices/%s/pdf", baseURL, invoice.ID)
+
+	message := fmt.Sprintf("Halo %s, berikut tagihan internet %s Anda untuk periode %02d/%d sebesar Rp %s. Silakan bayar sebelum %s.\nLink PDF: %s",
+		invoice.Customer.User.Name,
+		ispName,
+		invoice.PeriodMonth,
+		invoice.PeriodYear,
+		formatPriceStr(invoice.TotalAmount),
+		time.UnixMilli(invoice.DueDate).Format("02-01-2006"),
+		pdfLink,
+	)
+
+	return c.NotificationClient.SendWhatsApp(phone, message)
+}
+
+func (c *InvoiceUseCase) SendInvoiceEmail(ctx context.Context, invoiceId string, baseURL string) error {
+	tx := c.DB.WithContext(ctx)
+
+	invoice := new(entity.Invoice)
+	if err := c.InvoiceRepository.FindByIdWithDetails(tx, invoice, invoiceId); err != nil {
+		return fiber.ErrNotFound
+	}
+
+	email := invoice.Customer.User.Email
+	if email == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "Customer email not found")
+	}
+
+	ispName := util.GetISPName()
+	pdfLink := fmt.Sprintf("%s/api/public/invoices/%s/pdf", baseURL, invoice.ID)
+
+	subject := fmt.Sprintf("Tagihan Internet %s - Invoice %s", ispName, invoice.ID)
+	body := fmt.Sprintf("Halo %s,\n\nTerima kasih telah menggunakan layanan internet %s.\n\nBerikut rincian tagihan Anda:\n- Invoice ID: %s\n- Periode: %02d/%d\n- Total Tagihan: Rp %s\n- Jatuh Tempo: %s\n\nAnda dapat mengunduh invoice PDF Anda di sini: %s\n\nSilakan lakukan pembayaran melalui portal pelanggan.\n\nSalam hangat,\n%s",
+		invoice.Customer.User.Name,
+		ispName,
+		invoice.ID,
+		invoice.PeriodMonth,
+		invoice.PeriodYear,
+		formatPriceStr(invoice.TotalAmount),
+		time.UnixMilli(invoice.DueDate).Format("02-01-2006"),
+		pdfLink,
+		ispName,
+	)
+
+	return c.NotificationClient.SendEmail(email, subject, body)
+}
+
+func formatPriceStr(val float64) string {
+	str := fmt.Sprintf("%.0f", val)
+	var result []string
+	length := len(str)
+	for i, ch := range str {
+		result = append(result, string(ch))
+		if (length-i-1)%3 == 0 && i != length-1 {
+			result = append(result, ".")
+		}
+	}
+	return strings.Join(result, "")
+}
+
+func (c *InvoiceUseCase) GetPDFData(ctx context.Context, id string) ([]byte, error) {
+	tx := c.DB.WithContext(ctx)
+	invoice := new(entity.Invoice)
+	if err := c.InvoiceRepository.FindByIdWithDetails(tx, invoice, id); err != nil {
+		return nil, fiber.ErrNotFound
+	}
+
+	ispName := util.GetISPName()
+	return util.GenerateInvoicePDF(invoice, ispName)
 }
