@@ -2,7 +2,7 @@
 FROM golang:1.21-alpine AS builder
 
 # Install build dependencies
-RUN apk add --no-cache git
+RUN apk add --no-cache git build-base librdkafka-dev
 
 WORKDIR /app
 
@@ -14,14 +14,14 @@ RUN go mod download
 COPY . .
 
 # Build binaries
-RUN CGO_ENABLED=0 GOOS=linux go build -o web cmd/web/main.go
-RUN CGO_ENABLED=0 GOOS=linux go build -o scheduler cmd/scheduler/main.go
+RUN CGO_ENABLED=1 GOOS=linux go build -tags musl -o web cmd/web/main.go
+RUN CGO_ENABLED=1 GOOS=linux go build -tags musl -o scheduler cmd/scheduler/main.go
 
 # Production stage
 FROM alpine:latest
 
 # Install runtime dependencies
-RUN apk --no-cache add ca-certificates tzdata
+RUN apk --no-cache add ca-certificates tzdata librdkafka
 
 WORKDIR /app
 
@@ -38,3 +38,4 @@ RUN mkdir -p storage
 EXPOSE 9030
 
 CMD ["./web"]
+
