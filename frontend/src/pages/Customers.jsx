@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { adminService } from '../services/api';
-import { ShieldAlert, ShieldCheck, PowerOff, History, Eye, Edit, Save, X, FileImage, MapPin, Mail, MessageCircle } from 'lucide-react';
+import { ShieldAlert, ShieldCheck, PowerOff, History, Eye, Edit, Save, X, FileImage, MapPin, Mail, MessageCircle, RefreshCw } from 'lucide-react';
 import './Pages.css';
 
 export const Customers = () => {
@@ -160,6 +160,16 @@ export const Customers = () => {
             alert("Invoice notification sent via Email successfully!");
         } catch (error) {
             alert("Failed to send Email notification: " + (error.response?.data?.error || error.message));
+        }
+    };
+
+    const handleRecreatePPPoE = async (id) => {
+        if (!confirm("Are you sure you want to RECREATE this customer's PPPoE profile on MikroTik and RADIUS? This will drop current session and re-provision their credentials.")) return;
+        try {
+            await adminService.recreateCustomerPPPoE(id);
+            alert("PPPoE credentials recreated successfully on MikroTik and RADIUS!");
+        } catch (error) {
+            alert("Failed to recreate PPPoE: " + (error.response?.data?.error || error.message));
         }
     };
 
@@ -325,6 +335,15 @@ export const Customers = () => {
                                                     disabled={cust.status === 'terminated'}
                                                 >
                                                     <Mail size={14} /> Email
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleRecreatePPPoE(cust.id)}
+                                                    className="btn btn-warning btn-sm"
+                                                    title="Recreate PPPoE in Router/RADIUS"
+                                                    disabled={cust.status === 'terminated'}
+                                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}
+                                                >
+                                                    <RefreshCw size={14} /> Recreate
                                                 </button>
                                                 <button 
                                                     onClick={() => handleViewHistory(cust.id, cust.user?.name)} 

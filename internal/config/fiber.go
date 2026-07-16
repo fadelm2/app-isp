@@ -24,13 +24,7 @@ func NewFiber(config *viper.Viper) *fiber.App {
 			link2 + "," +
 			link3 + "," +
 			link4 + "," +
-			"https://kidul.greenet.id," +
-			"https://ticket.greenet.id," +
-			"https://apiticket.greenet.id," +
-			"https://portal.greenet.id," +
-			"https://ticketapi.greenet.id," +
-			"https://ticket.fadelweb.site," +
-			"https://ticketapi.fadelweb.site," +
+			"http://172.16.23.70,http://172.16.23.70:3000,http://172.16.23.70:8080,http://172.16.23.70:80,http://172.16.23.70:9000,http://172.16.23.70:9030," +
 			"http://172.16.21.211:3000," +
 			"http://192.168.1.70:3000," +
 			"http://192.168.1.70:8080,",

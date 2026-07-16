@@ -138,3 +138,9 @@ func (c *MikrotikClient) DisconnectActiveSession(host string, port int, username
 	_, err := c.executeREST(host, port, username, password, "DELETE", path, nil)
 	return err
 }
+
+func (c *MikrotikClient) DeletePPPoESecret(host string, port int, username string, password string, pppUser string) error {
+	path := fmt.Sprintf("/ppp/secret/%s", pppUser)
+	_, err := c.executeREST(host, port, username, password, "DELETE", path, nil)
+	return err
+}

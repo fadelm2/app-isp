@@ -351,3 +351,68 @@ func (c *CustomerUseCase) FindByUserId(ctx context.Context, userId string) (mode
 	}
 	return converter.CustomerToResponse(customer), nil
 }
+
+func (c *CustomerUseCase) RecreatePPPoE(ctx context.Context, id string, adminUserID string) (model.CustomerResponse, error) {
+	tx := c.DB.WithContext(ctx).Begin()
+	defer tx.Rollback()
+
+	customer := new(entity.Customer)
+	if err := c.CustomerRepository.FindByIdWithDetails(tx, customer, id); err != nil {
+		return model.CustomerResponse{}, fiber.ErrNotFound
+	}
+
+	// 1. Recreate RADIUS records
+	_ = c.RadiusRepository.DeleteCheck(tx, customer.RadiusUsername)
+	_ = c.RadiusRepository.DeleteReply(tx, customer.RadiusUsername)
+
+	radPass := customer.RadiusPassword
+	if customer.Status == "suspended" {
+		radPass += "_SUSPENDED"
+	}
+	radCheck := &entity.RadCheck{
+		Username:  customer.RadiusUsername,
+		Attribute: "Cleartext-Password",
+		Op:        ":=",
+		Value:     radPass,
+	}
+	if err := c.RadiusRepository.CreateOrUpdateCheck(tx, radCheck); err != nil {
+		return model.CustomerResponse{}, err
+	}
+
+	// 2. Recreate MikroTik PPPoE Secret
+	if customer.RouterID != nil {
+		r := customer.Router
+		speedVal := fmt.Sprintf("%dM/%dM", customer.Package.SpeedMbps, customer.Package.SpeedMbps)
+		
+		_ = c.MikrotikClient.DeletePPPoESecret(r.Host, r.Port, r.Username, r.Password, customer.PppUsername)
+		_ = c.MikrotikClient.DisconnectActiveSession(r.Host, r.Port, r.Username, r.Password, customer.PppUsername)
+
+		err := c.MikrotikClient.CreatePPPoESecret(r.Host, r.Port, r.Username, r.Password, customer.PppUsername, customer.PppPassword, speedVal)
+		if err != nil {
+			return model.CustomerResponse{}, fiber.NewError(fiber.StatusInternalServerError, fmt.Sprintf("MikroTik recreation failed: %v", err))
+		}
+
+		if customer.Status == "suspended" || customer.Status == "terminated" {
+			_ = c.MikrotikClient.DisablePPPoESecret(r.Host, r.Port, r.Username, r.Password, customer.PppUsername)
+			_ = c.MikrotikClient.DisconnectActiveSession(r.Host, r.Port, r.Username, r.Password, customer.PppUsername)
+		}
+	}
+
+	// Audit Log
+	history := &entity.CustomerHistory{
+		ID:         uuid.NewString(),
+		CustomerID: customer.ID,
+		Action:     "recreate_pppoe",
+		Notes:      "Recreated PPPoE secret on MikroTik and RADIUS settings.",
+		CreatedBy:  adminUserID,
+	}
+	if err := tx.Create(history).Error; err != nil {
+		return model.CustomerResponse{}, err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return model.CustomerResponse{}, fiber.ErrInternalServerError
+	}
+
+	return converter.CustomerToResponse(customer), nil
+}

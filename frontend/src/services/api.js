@@ -58,6 +58,7 @@ export const adminService = {
     suspendCustomer: (id, notes) => api.post(`/admin/customers/${id}/_suspend`, { notes }),
     unsuspendCustomer: (id, notes) => api.post(`/admin/customers/${id}/_unsuspend`, { notes }),
     terminateCustomer: (id, notes) => api.post(`/admin/customers/${id}/_terminate`, { notes }),
+    recreateCustomerPPPoE: (id) => api.post(`/admin/customers/${id}/_recreate-pppoe`),
     getCustomerHistory: (id) => api.get(`/admin/customers/${id}/history`),
 
     // Routers

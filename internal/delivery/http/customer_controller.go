@@ -134,3 +134,13 @@ func (c *CustomerController) GetCurrentCustomer(ctx *fiber.Ctx) error {
 	}
 	return ctx.JSON(model.WebResponse[model.CustomerResponse]{Data: response})
 }
+
+func (c *CustomerController) RecreatePPPoE(ctx *fiber.Ctx) error {
+	id := ctx.Params("customerId")
+	auth := middleware.GetUser(ctx)
+	response, err := c.UseCase.RecreatePPPoE(ctx.UserContext(), id, auth.ID)
+	if err != nil {
+		return err
+	}
+	return ctx.JSON(model.WebResponse[model.CustomerResponse]{Data: response})
+}

@@ -82,6 +82,7 @@ func (c *RouteConfig) SetupAuthAdminRoute() {
 	admin.Post("/customers/:customerId/_suspend", c.CustomerController.Suspend)
 	admin.Post("/customers/:customerId/_unsuspend", c.CustomerController.Unsuspend)
 	admin.Post("/customers/:customerId/_terminate", c.CustomerController.Terminate)
+	admin.Post("/customers/:customerId/_recreate-pppoe", c.CustomerController.RecreatePPPoE)
 	admin.Get("/customers/:customerId/history", c.CustomerController.GetHistory)
 
 	// Routers

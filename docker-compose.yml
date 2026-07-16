@@ -1,12 +1,51 @@
-version: '3'
+version: '3.8'
+
 services:
-  mysql56:
+  db:
     image: mysql:latest
     restart: unless-stopped
     container_name: mysql-container1
     ports:
-      - "3307:3306"
+      - "9307:3306"
     environment:
       MYSQL_ROOT_PASSWORD: fadel123
+      MYSQL_DATABASE: isp_management
     volumes:
-      - /var/lib/mysql56-data:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: isp-backend
+    restart: always
+    ports:
+      - "9030:3000"
+    depends_on:
+      - db
+    volumes:
+      - ./storage:/app/storage
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: isp-scheduler
+    restart: always
+    command: ./scheduler
+    depends_on:
+      - db
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: isp-frontend
+    restart: always
+    ports:
+      - "9000:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
