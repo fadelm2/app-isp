@@ -12,6 +12,7 @@ import (
 	"golang-clean-architecture/internal/model"
 	"golang-clean-architecture/internal/model/converter"
 	"golang-clean-architecture/internal/repository"
+	"golang-clean-architecture/internal/util"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
