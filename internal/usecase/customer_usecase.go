@@ -109,7 +109,16 @@ func (c *CustomerUseCase) Update(ctx context.Context, request *model.UpdateCusto
 		return model.CustomerResponse{}, fiber.ErrNotFound
 	}
 
+	oldPppUsername := customer.PppUsername
+	oldRadiusUsername := customer.RadiusUsername
+	var oldRouter *entity.Router
+	if customer.Router != nil {
+		r := *customer.Router
+		oldRouter = &r
+	}
+
 	notes := "Customer details updated: "
+	packageChanged := false
 	if request.PackageID != "" && request.PackageID != customer.PackageID {
 		pkg := new(entity.InternetPackage)
 		if err := c.PackageRepository.FindById(tx, pkg, request.PackageID); err != nil {
@@ -118,9 +127,46 @@ func (c *CustomerUseCase) Update(ctx context.Context, request *model.UpdateCusto
 		notes += fmt.Sprintf("Package changed from %s to %s. ", customer.Package.Name, pkg.Name)
 		customer.PackageID = request.PackageID
 		customer.Package = *pkg
+		packageChanged = true
+	}
 
-		// Sync speed to RADIUS
-		speedVal := fmt.Sprintf("%dM/%dM", pkg.SpeedMbps, pkg.SpeedMbps)
+	credsChanged := false
+	if request.PppUsername != "" && request.PppUsername != customer.PppUsername {
+		notes += fmt.Sprintf("PPP username changed from %s to %s. ", customer.PppUsername, request.PppUsername)
+		customer.PppUsername = request.PppUsername
+		customer.RadiusUsername = request.PppUsername // keep in sync
+		credsChanged = true
+	}
+
+	if request.PppPassword != "" && request.PppPassword != customer.PppPassword {
+		notes += fmt.Sprintf("PPP password changed. ")
+		customer.PppPassword = request.PppPassword
+		customer.RadiusPassword = request.PppPassword // keep in sync
+		credsChanged = true
+	}
+
+	// 1. Sync to RADIUS if package or credentials changed
+	if credsChanged || packageChanged {
+		if oldRadiusUsername != customer.RadiusUsername {
+			_ = c.RadiusRepository.DeleteCheck(tx, oldRadiusUsername)
+			_ = c.RadiusRepository.DeleteReply(tx, oldRadiusUsername)
+		}
+
+		radPass := customer.RadiusPassword
+		if customer.Status == "suspended" {
+			radPass += "_SUSPENDED"
+		}
+		radCheck := &entity.RadCheck{
+			Username:  customer.RadiusUsername,
+			Attribute: "Cleartext-Password",
+			Op:        ":=",
+			Value:     radPass,
+		}
+		if err := c.RadiusRepository.CreateOrUpdateCheck(tx, radCheck); err != nil {
+			return model.CustomerResponse{}, err
+		}
+
+		speedVal := fmt.Sprintf("%dM/%dM", customer.Package.SpeedMbps, customer.Package.SpeedMbps)
 		radReply := &entity.RadReply{
 			Username:  customer.RadiusUsername,
 			Attribute: "Mikrotik-Rate-Limit",
@@ -132,6 +178,7 @@ func (c *CustomerUseCase) Update(ctx context.Context, request *model.UpdateCusto
 		}
 	}
 
+	routerChanged := false
 	if request.RouterID != "" && (customer.RouterID == nil || request.RouterID != *customer.RouterID) {
 		router := new(entity.Router)
 		if err := c.RouterRepository.FindById(tx, router, request.RouterID); err != nil {
@@ -140,6 +187,38 @@ func (c *CustomerUseCase) Update(ctx context.Context, request *model.UpdateCusto
 		notes += fmt.Sprintf("Router changed. ")
 		customer.RouterID = &request.RouterID
 		customer.Router = router
+		routerChanged = true
+	}
+
+	// 2. Sync to MikroTik Router if router, credentials, or package changed
+	if routerChanged || credsChanged || packageChanged {
+		speedVal := fmt.Sprintf("%dM/%dM", customer.Package.SpeedMbps, customer.Package.SpeedMbps)
+
+		// Delete secret on old router if router changed
+		if routerChanged && oldRouter != nil {
+			_ = c.MikrotikClient.DeletePPPoESecret(oldRouter.Host, oldRouter.Port, oldRouter.Username, oldRouter.Password, oldPppUsername)
+			_ = c.MikrotikClient.DisconnectActiveSession(oldRouter.Host, oldRouter.Port, oldRouter.Username, oldRouter.Password, oldPppUsername)
+		}
+
+		// Delete old secret on current router if credentials/package changed but router didn't change
+		if !routerChanged && (credsChanged || packageChanged) && oldRouter != nil {
+			_ = c.MikrotikClient.DeletePPPoESecret(oldRouter.Host, oldRouter.Port, oldRouter.Username, oldRouter.Password, oldPppUsername)
+			_ = c.MikrotikClient.DisconnectActiveSession(oldRouter.Host, oldRouter.Port, oldRouter.Username, oldRouter.Password, oldPppUsername)
+		}
+
+		// Provision secret on new/current router
+		if customer.RouterID != nil {
+			r := customer.Router
+			err := c.MikrotikClient.CreatePPPoESecret(r.Host, r.Port, r.Username, r.Password, customer.PppUsername, customer.PppPassword, speedVal)
+			if err != nil {
+				return model.CustomerResponse{}, fiber.NewError(fiber.StatusInternalServerError, fmt.Sprintf("MikroTik sync failed: %v", err))
+			}
+
+			if customer.Status == "suspended" || customer.Status == "terminated" {
+				_ = c.MikrotikClient.DisablePPPoESecret(r.Host, r.Port, r.Username, r.Password, customer.PppUsername)
+				_ = c.MikrotikClient.DisconnectActiveSession(r.Host, r.Port, r.Username, r.Password, customer.PppUsername)
+			}
+		}
 	}
 
 	if request.DueDateDay != 0 {

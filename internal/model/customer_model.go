@@ -32,7 +32,9 @@ type CustomerResponse struct {
 	PackageID      string                `json:"package_id"`
 	RouterID       *string               `json:"router_id"`
 	PppUsername    string                `json:"ppp_username"`
+	PppPassword    string                `json:"ppp_password"`
 	RadiusUsername string                `json:"radius_username"`
+	RadiusPassword string                `json:"radius_password"`
 	DueDateDay     int                   `json:"due_date_day"`
 	OdpNumber      string                `json:"odp_number"`
 	CreatedAt      int64                 `json:"created_at"`

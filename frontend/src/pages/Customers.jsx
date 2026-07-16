@@ -561,7 +561,7 @@ export const Customers = () => {
                                                     required
                                                 />
                                             ) : (
-                                                <span className="font-mono">•••••••• (Secured)</span>
+                                                <span className="font-mono">{selectedCust.ppp_password || 'Not Set'}</span>
                                             )}
                                         </span>
                                     </div>
