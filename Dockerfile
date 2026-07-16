@@ -13,6 +13,9 @@ RUN go mod download
 # Copy application source code
 COPY . .
 
+# Tidy module dependencies to resolve missing go.sum entries
+RUN go mod tidy
+
 # Build binaries
 RUN CGO_ENABLED=1 GOOS=linux go build -tags musl -o web cmd/web/main.go
 RUN CGO_ENABLED=1 GOOS=linux go build -tags musl -o scheduler cmd/scheduler/main.go
