@@ -18,8 +18,8 @@
     "username": "root",
     "password": "fadel123",
     "host": "localhost",
-    "port": 3307,
-    "name": "golang_architecture_jwt",
+    "port": 9307,
+    "name": "isp_management",
     "pool": {
       "idle": 10,
       "max": 100,

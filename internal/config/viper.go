@@ -2,6 +2,8 @@ package config
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/spf13/viper"
 )
 
@@ -20,5 +22,9 @@ func NewViper() *viper.Viper {
 		panic(fmt.Errorf("Fatal error config file: %w \n", err))
 	}
 
+	config.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	config.AutomaticEnv()
+
 	return config
 }
+
