@@ -9,7 +9,6 @@ import (
 	"golang-clean-architecture/internal/entity"
 	"golang-clean-architecture/internal/gateway/mikrotik"
 	"golang-clean-architecture/internal/gateway/notification"
-	"golang-clean-architecture/internal/model"
 	"golang-clean-architecture/internal/repository"
 	"golang-clean-architecture/internal/usecase"
 
